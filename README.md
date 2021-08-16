@@ -1,6 +1,6 @@
 # node-pickcab
 
-Backend for Bhoomi cabs android application.
+Backend for Pickcab android application.
 
 Uses Express, Axios and MongoDB.
 
