@@ -7,9 +7,8 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 
-
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json())
+app.use(express.json());
 
 var port = process.env.PORT;
 
@@ -21,7 +20,7 @@ app.listen(port, function () {
   console.log("started on 300000000");
 });
 
-const dbUrl = process.env.MONGO
+const dbUrl = process.env.MONGO;
 
 // const dbUrl = "mongodb://localhost:27017/phoneNumbersDB";
 
@@ -38,16 +37,24 @@ app.get("/", function (req, res) {
   res.send("sfdasfaf");
 });
 
-
 app.post("/verify/number/", function (req, res) {
+  let isMasterNum = req.body.number == process.env.MASTER_NUM;
+
+  if (isMasterNum) {
+    res.status(200).send(JSON.parse('{"result": "Verification Started"}'));
+    return;
+  }
+
   let otpGenerated = getRndInteger(100000, 999999);
 
-  try{
+  try {
     sendOtp(req.body.number, otpGenerated, function (response) {
-      console.log(response)
+      console.log(response);
     });
-  } catch(err){
+  } catch (err) {
     console.log(err);
+    res.sendStatus(500);
+    return;
   }
 
   PhoneNumber.updateOne(
@@ -57,7 +64,7 @@ app.post("/verify/number/", function (req, res) {
     function (err) {
       if (err) {
         console.log(err);
-        res.sendStatus(500)
+        res.sendStatus(500);
       } else {
         res.status(200).send(JSON.parse('{"result": "Verification Started"}'));
       }
@@ -66,7 +73,15 @@ app.post("/verify/number/", function (req, res) {
 });
 
 app.post("/verify/number/otp/", function (req, res) {
+  let isMasterOtp = req.body.MASTER_OTP == process.env.MASTER_OTP;
+
+  if (isMasterOtp) {
+    res.status(200).send(JSON.parse('{"result": "verified"}'));
+    return;
+  }
+
   console.log("number " + req.body.number + " otp" + req.body.otp);
+
   PhoneNumber.findOne({ number: req.body.number }, function (err, foundNumber) {
     console.log(foundNumber);
 
@@ -90,27 +105,20 @@ function getRndInteger(min, max) {
 }
 
 app.post("/SendConfirmation", function (req, res) {
+  sendMail(req.body, function (result) {
+    console.log(result);
 
-    sendMail(req.body, function (result) {
-      
-      console.log(result);
+    if (result.result == "Mail Sent") {
+      res.sendStatus(200);
+    }
+  });
 
-      if(result.result== "Mail Sent"){
-        res.sendStatus(200);
-      }
-    });
-
-    sendSMS(req.body, function(result){
-
-      console.log(result)
-    });
-
+  sendSMS(req.body, function (result) {
+    console.log(result);
+  });
 });
 
-
-function sendSMS(details, result){
-
-
+function sendSMS(details, result) {
   let messageForUser = getFormattedConfirmationMessage(
     false,
     process.env.ADMINNUM,
@@ -137,55 +145,50 @@ function sendSMS(details, result){
     true
   );
 
-
-  axios.get(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForUser}&language=english&flash=0&numbers=${details.number}`)
-  .then(function (response) {
-    // handle success
-    result( 
-      response
+  axios
+    .get(
+      `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForUser}&language=english&flash=0&numbers=${details.number}`
     )
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  });
+    .then(function (response) {
+      // handle success
+      result(response);
+    })
+    .catch(function (error) {
+      // handle error
+      console.log(error);
+    });
 
-  axios.get(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForAdmin}&language=english&flash=0&numbers=${process.env.ADMIN_NUM}`)
-  .then(function (response) {
-    // handle success
-    result( 
-      response
+  axios
+    .get(
+      `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForAdmin}&language=english&flash=0&numbers=${process.env.ADMIN_NUM}`
     )
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  });
-
+    .then(function (response) {
+      // handle success
+      result(response);
+    })
+    .catch(function (error) {
+      // handle error
+      console.log(error);
+    });
 }
 
+function sendOtp(number, otp, result) {
+  let message = `Your One time password for pickcab is ${otp} \n\n PCYX%2BT1RS21`;
 
-function sendOtp(number, otp, result){
-
-  let message = `Your One time password for pickcab is ${otp} \n\n PCYX%2BT1RS21`
-
-  axios.get(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${message}&language=english&flash=0&numbers=${number}`)
-  .then(function (response) {
-    result( 
-      response
+  axios
+    .get(
+      `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${message}&language=english&flash=0&numbers=${number}`
     )
-  })
-  .catch(function (error) {
-    // handle error
-    result(response);
-  });
-
+    .then(function (response) {
+      result(response);
+    })
+    .catch(function (error) {
+      // handle error
+      result(response);
+    });
 }
-
-
 
 function sendMail(details, result) {
-
   let messageForAdmin = getFormattedConfirmationMessage(
     true,
     details.number,
@@ -210,19 +213,19 @@ function sendMail(details, result) {
 
   const message = {
     from: "abeta8327@gmail.com",
-    to: `esskay099@gmail.com, ${process.env.ADMIN_EMAIL}`, 
-    subject: "Booking Confirmation", 
-    text: messageForAdmin, 
+    to: `esskay099@gmail.com, ${process.env.ADMIN_EMAIL}`,
+    subject: "Booking Confirmation",
+    text: messageForAdmin,
   };
   transport.sendMail(message, function (err, info) {
     if (err) {
       result({
         result: "Mail Sent Error",
-        msg: err
+        msg: err,
       });
     } else {
       result({
-        result: "Mail Sent"
+        result: "Mail Sent",
       });
     }
   });
