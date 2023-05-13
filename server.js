@@ -1,14 +1,14 @@
 //jshint esversion:6
 
 require("dotenv").config();
-import express, { urlencoded, json } from "express";
+const express = require("express");
 const app = express();
-import { connect, Schema, model } from "mongoose";
-import { get } from "axios";
-import { createTransport } from "nodemailer";
+const mongoose = require("mongoose");
+const axios = require("axios");
+const nodemailer = require("nodemailer");
 
-app.use(urlencoded({ extended: true }));
-app.use(json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 var port = process.env.PORT;
 
@@ -24,14 +24,14 @@ const dbUrl = process.env.MONGO;
 
 // const dbUrl = "mongodb://localhost:27017/phoneNumbersDB";
 
-connect(dbUrl, { useNewUrlParser: true });
+mongoose.connect(dbUrl, { useNewUrlParser: true });
 
-const schema = Schema({
+const schema = mongoose.Schema({
   number: String,
   otp: Number,
 });
 
-const PhoneNumber = model("Number", schema);
+const PhoneNumber = mongoose.model("Number", schema);
 
 app.get("/", function (req, res) {
   res.send("sfdasfaf");
@@ -145,7 +145,8 @@ function sendSMS(details, result) {
     true
   );
 
-  get(
+  axios
+    .get(
       `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForUser}&language=english&flash=0&numbers=${details.number}`
     )
     .then(function (response) {
@@ -157,7 +158,8 @@ function sendSMS(details, result) {
       console.log(error);
     });
 
-  get(
+  axios
+    .get(
       `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${messageForAdmin}&language=english&flash=0&numbers=${process.env.ADMIN_NUM}`
     )
     .then(function (response) {
@@ -173,7 +175,8 @@ function sendSMS(details, result) {
 function sendOtp(number, otp, result) {
   let message = `Your One time password for pickcab is ${otp} \n\n PCYX%2BT1RS21`;
 
-  get(
+  axios
+    .get(
       `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS}&route=v3&sender_id=TXTIND&message=${message}&language=english&flash=0&numbers=${number}`
     )
     .then(function (response) {
@@ -199,7 +202,7 @@ function sendMail(details, result) {
     true
   );
 
-  let transport = createTransport({
+  let transport = nodemailer.createTransport({
     service: "gmail",
     host: "smtp.gmail.com",
     auth: {
