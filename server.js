@@ -39,6 +39,8 @@ app.get("/", function (req, res) {
 
 app.post("/verify/number/", function (req, res) {
   let isMasterNum = req.body.number == process.env.MASTER_NUM;
+  console.log(`req.body.number ${req.body.number}`);
+  console.log(`Master Num ${process.env.MASTER_NUM}`)
 
   if (isMasterNum) {
     res.status(200).send(JSON.parse('{"result": "Verification Started"}'));
