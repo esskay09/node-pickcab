@@ -75,9 +75,10 @@ app.post("/verify/number/", function (req, res) {
 });
 
 app.post("/verify/number/otp/", function (req, res) {
-  let isMasterOtp = req.body.MASTER_OTP == process.env.MASTER_OTP;
+  let isMasterNum = req.body.number == process.env.MASTER_NUM;
+  let isMasterOtp = req.body.otp == process.env.MASTER_OTP;
 
-  if (isMasterOtp) {
+  if (isMasterNum && isMasterOtp) {
     res.status(200).send(JSON.parse('{"result": "verified"}'));
     return;
   }
