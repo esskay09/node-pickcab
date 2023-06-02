@@ -233,6 +233,8 @@ function sendMail(details, result) {
   });
 }
 
+//whatever
+
 function getFormattedConfirmationMessage(
   forMail,
   phoneNumber,
