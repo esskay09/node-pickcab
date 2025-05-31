@@ -20,6 +20,11 @@ app.listen(port, function () {
   console.log("started on 300000000");
 });
 
+const cors = require('cors');
+app.use(cors({
+  origin: ['https://pickcab-delete.onrender.com/']
+}))
+
 const dbUrl = process.env.MONGO;
 
 // const dbUrl = "mongodb://localhost:27017/phoneNumbersDB";
@@ -102,6 +107,8 @@ app.post("/verify/number/otp/", function (req, res) {
     }
   });
 });
+
+
 
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
