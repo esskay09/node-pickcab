@@ -22,8 +22,10 @@ app.listen(port, function () {
 
 const cors = require('cors');
 app.use(cors({
-  origin: ['https://pickcab-delete.onrender.com/']
-}))
+  origin: 'https://pickcab-delete.onrender.com', // or "*" for all origins (not recommended for production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: false // if you're using cookies/auth headers
+}));
 
 const dbUrl = process.env.MONGO;
 
